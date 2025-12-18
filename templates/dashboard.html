@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3">🌍 EcoSight Enterprise</h1>
+        <small class="text-muted">Strategic Business Intelligence Dashboard</small>
+    </div>
+    <div class="w-25">
+        <label class="text-muted small">Target Market / Region</label>
+        <select id="countryFilter" class="form-select shadow-sm" onchange="updateDashboard()">
+            {% for country in countries %}
+            <option value="{{ country }}">{{ country }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4 border-0 bg-light">
+    <div class="card-body d-flex align-items-center justify-content-between py-2">
+        <strong class="text-success">🌱 Net Zero 2050 Goal:</strong>
+        <div class="progress w-75" style="height: 25px;">
+            <div id="net-zero-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%">
+                0% Renewable
+            </div>
+        </div>
+        <span id="net-zero-target" class="badge bg-dark">Target: 100%</span>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
+            <div>
+                <strong>☀️ Solar Efficiency (Live)</strong><br>
+                <small class="text-muted">Real-time Station Data</small>
+            </div>
+            <span class="h4 mb-0"><span id="live-solar">...</span> W/m²</span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="alert alert-info d-flex justify-content-between align-items-center shadow-sm">
+            <div>
+                <strong>💨 Wind Farm Capacity (Live)</strong><br>
+                <small class="text-muted">Real-time Turbine Speed</small>
+            </div>
+            <span class="h4 mb-0"><span id="live-wind">...</span> km/h</span>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 text-center">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-left-success py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Economic Health (GDP)</div>
+                <div class="h3 mb-0 font-weight-bold text-gray-800" id="kpi-gdp">...</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-left-danger py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Carbon Liability (CO2)</div>
+                <div class="h3 mb-0 font-weight-bold text-gray-800" id="kpi-co2">...</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-left-primary py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Transition Status</div>
+                <div class="h3 mb-0 font-weight-bold text-gray-800" id="kpi-trend">Processing...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 border-dark">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">💰 Carbon Tax Risk Simulator</h6>
+            </div>
+            <div class="card-body">
+                <label class="small font-weight-bold">Projected Carbon Price ($/Ton)</label>
+                <input type="range" class="form-range" id="taxRange" min="10" max="150" value="50" oninput="calculateFinancials()">
+                <div class="d-flex justify-content-between mb-3">
+                    <small>$10</small>
+                    <strong id="tax-display" class="text-primary">$50</strong>
+                    <small>$150</small>
+                </div>
+                <div class="text-center p-3 bg-light rounded border">
+                    <h6 class="text-muted mb-1">Est. Annual Tax Liability</h6>
+                    <h2 class="text-danger fw-bold" id="total-liability">$0 M</h2>
+                </div>
+                <div class="mt-3">
+                    <small><strong>🤖 AI Insight:</strong> <span id="ai-insight">Analyzing...</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">📈 Renewable Investment Planner</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="small font-weight-bold">Investment Budget ($ Millions)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" id="invest-amount" class="form-control" value="10" oninput="calculateROI()">
+                        <span class="input-group-text">M</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="small font-weight-bold">Technology Sector</label>
+                    <select id="invest-tech" class="form-select" onchange="calculateROI()">
+                        <option value="solar">Solar PV Farm</option>
+                        <option value="wind">Wind Turbine Array</option>
+                    </select>
+                </div>
+                <div class="alert alert-success mb-0">
+                    <strong>Projected Annual Return:</strong>
+                    <h3 id="roi-output" class="mb-0 fw-bold">$1.2 M / yr</h3>
+                    <small id="roi-efficiency" class="text-muted">Based on 450 W/m² Live Efficiency</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white font-weight-bold">Historical Generation Trends (GW)</div>
+            <div class="card-body">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white font-weight-bold">Current Energy Mix</div>
+            <div class="card-body">
+                <canvas id="mixChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let trendChart, mixChart;
+    let currentCo2 = 0;
+    // Live Data Storage for ROI Calculator
+    let liveSolarRad = 0;
+    let liveWindSpeed = 0;
+
+    async function updateDashboard() {
+        const country = document.getElementById('countryFilter').value;
+        const response = await fetch(`/api/data?country=${country}`);
+        const data = await response.json();
+
+        // 1. Live API Data
+        liveSolarRad = data.live.solar_rad; // Store for ROI Calc
+        liveWindSpeed = data.live.wind_speed; // Store for ROI Calc
+        
+        document.getElementById('live-solar').innerText = liveSolarRad;
+        document.getElementById('live-wind').innerText = liveWindSpeed;
+
+        // 2. KPIs & Net Zero Tracker
+        const avgGdp = (data.gdp.reduce((a, b) => a + b, 0) / data.gdp.length).toFixed(1);
+        currentCo2 = data.co2[data.co2.length - 1]; 
+        
+        // Calculate Renewable Share for Net Zero Bar
+        const lastIdx = data.years.length - 1;
+        const totalEnergy = data.solar[lastIdx] + data.wind[lastIdx] + data.coal[lastIdx];
+        const renewableShare = ((data.solar[lastIdx] + data.wind[lastIdx]) / totalEnergy * 100).toFixed(1);
+        
+        document.getElementById('net-zero-bar').style.width = renewableShare + "%";
+        document.getElementById('net-zero-bar').innerText = renewableShare + "% Renewable";
+
+        document.getElementById('kpi-gdp').innerText = avgGdp + "%";
+        document.getElementById('kpi-co2').innerText = currentCo2.toFixed(0) + " Mt";
+
+        // 3. Render Charts
+        renderCharts(data);
+
+        // 4. Run Calculators
+        calculateFinancials();
+        calculateROI();
+    }
+
+    function calculateFinancials() {
+        const taxRate = document.getElementById('taxRange').value;
+        document.getElementById('tax-display').innerText = "$" + taxRate;
+        const liability = (currentCo2 * taxRate).toFixed(0);
+        document.getElementById('total-liability').innerText = "$" + Number(liability).toLocaleString() + " M";
+
+        const insightBox = document.getElementById('ai-insight');
+        if (liability > 10000) {
+            insightBox.innerHTML = "🔴 <strong>CRITICAL:</strong> High tax exposure. Divest coal immediately.";
+            document.getElementById('kpi-trend').innerText = "Critical Risk";
+            document.getElementById('kpi-trend').className = "h3 mb-0 font-weight-bold text-danger";
+        } else {
+            insightBox.innerHTML = "🟢 <strong>STABLE:</strong> Emissions within target range.";
+            document.getElementById('kpi-trend').innerText = "On Track";
+            document.getElementById('kpi-trend').className = "h3 mb-0 font-weight-bold text-success";
+        }
+    }
+
+    function calculateROI() {
+        // Logic: Investment buys capacity. Live Weather determines efficiency.
+        // Base Revenue per MW capacity = $150,000/year (Hypothetical Market Rate)
+        
+        const amount = document.getElementById('invest-amount').value;
+        const tech = document.getElementById('invest-tech').value;
+        
+        let projectedRevenue = 0;
+        let efficiencyMsg = "";
+
+        if (tech === 'solar') {
+            // Solar Factor: Higher Radiation = Better ROI
+            // Normalize: 500 W/m² is "100% efficiency" standard for this simple model
+            const efficiencyFactor = Math.min(liveSolarRad / 500, 1.5); 
+            // Assume $1M buys 1MW capacity. 1MW * $150k * Efficiency
+            projectedRevenue = amount * 0.15 * (efficiencyFactor || 0.5); // Default to 0.5 if night
+            
+            efficiencyMsg = `Based on ${liveSolarRad} W/m² Live Radiation`;
+        } else {
+            // Wind Factor: Higher Speed = Better ROI
+            // Normalize: 20 km/h is "100% efficiency" standard
+            const efficiencyFactor = Math.min(liveWindSpeed / 20, 2.0);
+            projectedRevenue = amount * 0.18 * (efficiencyFactor || 0.5);
+            
+            efficiencyMsg = `Based on ${liveWindSpeed} km/h Live Wind Speed`;
+        }
+
+        document.getElementById('roi-output').innerText = "$" + projectedRevenue.toFixed(2) + " M / yr";
+        document.getElementById('roi-efficiency').innerText = efficiencyMsg;
+    }
+
+    function renderCharts(data) {
+        const ctx1 = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+
+        trendChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: data.years,
+                datasets: [
+                    { label: 'Solar', data: data.solar, borderColor: '#f1c40f', tension: 0.3 },
+                    { label: 'Wind', data: data.wind, borderColor: '#3498db', tension: 0.3 },
+                    { label: 'Coal', data: data.coal, borderColor: '#e74c3c', borderDash: [5,5] }
+                ]
+            },
+            options: { responsive: true, interaction: { mode: 'index', intersect: false } }
+        });
+
+        const lastIdx = data.years.length - 1;
+        const ctx2 = document.getElementById('mixChart').getContext('2d');
+        if (mixChart) mixChart.destroy();
+
+        mixChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Solar', 'Wind', 'Coal'],
+                datasets: [{
+                    data: [data.solar[lastIdx], data.wind[lastIdx], data.coal[lastIdx]],
+                    backgroundColor: ['#f1c40f', '#3498db', '#e74c3c']
+                }]
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", updateDashboard);
+</script>
+{% endblock %}
